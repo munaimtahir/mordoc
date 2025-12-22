@@ -236,6 +236,19 @@ npm run build
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
+## Deployment
+
+### Keystone Deployment
+
+Mordoc can be deployed using [Keystone](https://github.com/your-username/keystone), a self-hosted deployment control panel. See [docs/KEYSTONE_DEPLOYMENT.md](docs/KEYSTONE_DEPLOYMENT.md) for detailed instructions.
+
+**Quick Start:**
+1. Add repository in Keystone
+2. Create app with required environment variables (DATABASE_URL, REDIS_URL)
+3. Deploy!
+
+The Dockerfile at the root builds both frontend and backend into a single container that can be deployed via Keystone.
+
 ## License
 
 MIT
