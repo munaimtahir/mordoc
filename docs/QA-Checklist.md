@@ -1,36 +1,41 @@
 # QA-Checklist.md — v1
 
 ## Import
-- [ ] Upload DOCX works
-- [ ] Parse completes and section tree is created
-- [ ] Old content appears per section
+- [x] Upload DOCX works
+- [x] Parse completes and section tree is created
+- [x] Old content appears per section
 
 ## Outline operations
-- [ ] Rename heading
-- [ ] Promote/demote changes nesting
-- [ ] Reorder persists orderIndex
-- [ ] Merge creates new section and preserves old lineage in audit
+- [x] Rename heading
+- [x] Promote/demote changes nesting
+- [x] Reorder persists orderIndex
+- [x] Merge creates new section and preserves old lineage in audit
 
 ## Editing
-- [ ] Block editor supports heading/paragraph/list/image
-- [ ] Inline marks: bold/italic/link preserved in storage
-- [ ] Copy Old → New initializes blocks
+- [x] Block editor supports heading/paragraph/list/image
+- [x] Inline marks: bold/italic/link preserved in storage
+- [x] Copy Old → New initializes blocks
 
 ## Workflow
-- [ ] Status transitions work
-- [ ] Verify locks section
-- [ ] Reopen requires reason and logs audit
+- [x] Status transitions work
+- [x] Verify locks section
+- [x] Reopen requires reason and logs audit
 
 ## AI
-- [ ] Presets run per section
-- [ ] Output converts to blocks
-- [ ] Apply requires explicit accept
+- [x] Presets run per section
+- [x] Output converts to blocks
+- [x] Apply requires explicit accept
 
 ## Export
-- [ ] Template style mapping applied
-- [ ] DOCX export builds and downloads
-- [ ] Export preflight warns if not all verified
-- [ ] Admin override logged
+- [x] Template style mapping applied
+- [x] DOCX export builds and downloads
+- [x] Export preflight warns if not all verified
+- [~] Admin override logged (export is logged, but no explicit "admin override" flag)
 
 ## Audit
-- [ ] Key actions recorded and retrievable
+- [x] Key actions recorded and retrievable
+
+---
+**Last Audit:** 2025-12-22  
+**Status:** 20/21 items complete (95%)  
+**See:** `docs/QA-AUDIT-REPORT.md` for detailed verification
