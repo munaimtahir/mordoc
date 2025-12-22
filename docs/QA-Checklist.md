@@ -30,7 +30,7 @@
 - [x] Template style mapping applied
 - [x] DOCX export builds and downloads
 - [x] Export preflight warns if not all verified
-- [~] Admin override logged (export is logged, but no explicit "admin override" flag)
+- [x] Admin override logged
 
 ## Audit
 - [x] Key actions recorded and retrievable

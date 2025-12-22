@@ -224,11 +224,36 @@ def ai_section(request):
 def export_document(request, document_id):
     doc = get_object_or_404(Document, id=document_id)
     template_id = request.data.get("templateId")
+    admin_override = request.data.get("adminOverride", False)
     template = None
     if template_id:
         template = get_object_or_404(Template, id=template_id)
+    
+    # Check preflight status to determine if admin override is needed
+    sections = Section.objects.filter(document=doc)
+    status_counts = {
+        "not_started": 0,
+        "draft": 0,
+        "in_review": 0,
+        "verified": 0,
+        "total": 0
+    }
+    for s in sections:
+        status_counts["total"] += 1
+        status_counts[s.status] += 1
+    all_verified = status_counts["verified"] == status_counts["total"]
+    
     job = ExportJob.objects.create(document=doc, template=template)
-    log_action("document", doc.id, "export_requested", {"exportJobId": str(job.id)})
+    
+    # Log export request
+    log_payload = {"exportJobId": str(job.id)}
+    if admin_override and not all_verified:
+        log_payload["adminOverride"] = True
+        log_payload["reason"] = "Exporting with unverified sections"
+        log_action("document", doc.id, "export_admin_override", log_payload)
+    else:
+        log_action("document", doc.id, "export_requested", log_payload)
+    
     export_docx.delay(str(job.id))
     return Response(ExportJobSerializer(job).data, status=201)
 

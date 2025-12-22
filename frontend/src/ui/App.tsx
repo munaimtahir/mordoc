@@ -543,11 +543,29 @@ export default function App() {
 
   async function startExport() {
     if (!docId) return
+    
+    // Check if admin override is needed (warnings exist but user wants to proceed)
+    const needsOverride = preflight && !preflight.allVerified && preflight.warnings.length > 0
+    let adminOverride = false
+    
+    if (needsOverride) {
+      const confirmed = confirm(
+        `⚠️ Warning: Not all sections are verified.\n\n` +
+        `Warnings:\n${preflight.warnings.join('\n')}\n\n` +
+        `Do you want to proceed with export anyway? (This will be logged as an admin override.)`
+      )
+      if (!confirmed) return
+      adminOverride = true
+    }
+    
     setLoading(true)
     try {
       const job = await api<{ id: string }>(`/documents/${docId}/export`, {
         method: 'POST',
-        body: JSON.stringify({ templateId: exportTemplateId || null })
+        body: JSON.stringify({ 
+          templateId: exportTemplateId || null,
+          adminOverride: adminOverride
+        })
       })
       setExportJobId(job.id)
       setExportStatus('pending')
