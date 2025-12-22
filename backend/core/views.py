@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db.models import Count
 from .models import Project, Document, Section, SectionContent, Comment, Snapshot, AuditLog, ExportJob, Template
 from .serializers import (
     ProjectSerializer, DocumentSerializer, SectionSerializer, SectionContentSerializer,
@@ -12,6 +13,7 @@ from .block_schema import validate_blocks
 from .services import log_action, enforce_lock
 from .tasks import parse_docx, export_docx
 from .ai import get_provider
+from .template_mapping import DEFAULT_MAPPING
 
 @api_view(["GET"])
 def health(request):
@@ -240,3 +242,113 @@ def document_audit(request, document_id):
     doc = get_object_or_404(Document, id=document_id)
     logs = AuditLog.objects.filter(entity_id=doc.id).order_by("-created_at")[:200]
     return Response(AuditLogSerializer(logs, many=True).data)
+
+
+@api_view(["GET"])
+def project_documents(request, project_id):
+    """List all documents for a project."""
+    project = get_object_or_404(Project, id=project_id)
+    docs = Document.objects.filter(project=project).order_by("-created_at")
+    return Response(DocumentSerializer(docs, many=True).data)
+
+
+@api_view(["GET", "POST"])
+def templates(request):
+    """List or create templates."""
+    if request.method == "GET":
+        return Response(TemplateSerializer(Template.objects.all().order_by("-created_at"), many=True).data)
+    
+    # POST - create template
+    name = request.data.get("name", "Custom Template")
+    mapping_json = request.data.get("mapping_json", DEFAULT_MAPPING)
+    
+    template = Template.objects.create(name=name, mapping_json=mapping_json)
+    log_action("template", template.id, "create_template", {"name": name})
+    return Response(TemplateSerializer(template).data, status=201)
+
+
+@api_view(["GET"])
+def template_detail(request, template_id):
+    """Get template details."""
+    template = get_object_or_404(Template, id=template_id)
+    return Response(TemplateSerializer(template).data)
+
+
+@api_view(["GET"])
+def export_preflight(request, document_id):
+    """
+    Preflight check before export.
+    Returns section status counts and warnings.
+    """
+    doc = get_object_or_404(Document, id=document_id)
+    sections = Section.objects.filter(document=doc)
+    
+    # Count sections by status
+    status_counts = {
+        "not_started": 0,
+        "draft": 0,
+        "in_review": 0,
+        "verified": 0,
+        "total": 0
+    }
+    
+    for s in sections:
+        status_counts["total"] += 1
+        status_counts[s.status] += 1
+    
+    # Generate warnings
+    warnings = []
+    if status_counts["not_started"] > 0:
+        warnings.append(f"{status_counts['not_started']} section(s) have not been started")
+    if status_counts["draft"] > 0:
+        warnings.append(f"{status_counts['draft']} section(s) are still in draft")
+    if status_counts["in_review"] > 0:
+        warnings.append(f"{status_counts['in_review']} section(s) are pending review")
+    
+    all_verified = status_counts["verified"] == status_counts["total"]
+    
+    return Response({
+        "documentId": str(doc.id),
+        "title": doc.title,
+        "statusCounts": status_counts,
+        "allVerified": all_verified,
+        "warnings": warnings,
+        "canExport": True,  # v1: allow export even if not all verified
+    })
+
+
+@api_view(["GET"])
+def section_snapshots(request, section_id):
+    """List all snapshots for a section."""
+    section = get_object_or_404(Section, id=section_id)
+    snapshots = Snapshot.objects.filter(section=section).order_by("-saved_at")
+    return Response(SnapshotSerializer(snapshots, many=True).data)
+
+
+@api_view(["POST"])
+def restore_snapshot(request, section_id, snapshot_id):
+    """Restore a section to a previous snapshot."""
+    section = get_object_or_404(Section, id=section_id)
+    snapshot = get_object_or_404(Snapshot, id=snapshot_id, section=section)
+    
+    if section.locked:
+        return Response({"error": "Section is locked. Reopen with reason to restore."}, status=400)
+    
+    # Save current state as a snapshot before restoring
+    content = getattr(section, "content", None)
+    if content:
+        Snapshot.objects.create(
+            section=section,
+            reason="Auto-saved before restore",
+            blocks_json=content.blocks_json
+        )
+        # Restore snapshot content
+        content.blocks_json = snapshot.blocks_json
+        content.save()
+    
+    log_action("section", section.id, "restore_snapshot", {
+        "snapshotId": str(snapshot.id),
+        "snapshotReason": snapshot.reason
+    })
+    
+    return Response({"ok": True, "restored": SnapshotSerializer(snapshot).data})
