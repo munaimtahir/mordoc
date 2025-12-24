@@ -20,3 +20,7 @@ backend/media/
 # Env
 backend/.env
 frontend/.env
+
+# Test infrastructure (local only)
+test-traefik/
+test-nginx/
