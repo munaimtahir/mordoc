@@ -60,16 +60,26 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgres://paperless:paperless@localho
 # Simple parse (v1). For production, use dj-database-url.
 import urllib.parse as up
 u = up.urlparse(DATABASE_URL)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": u.path.lstrip("/"),
-        "USER": u.username,
-        "PASSWORD": u.password,
-        "HOST": u.hostname,
-        "PORT": u.port or 5432,
+
+# Support SQLite for testing
+if u.scheme == "sqlite":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": u.path or ":memory:",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": u.path.lstrip("/"),
+            "USER": u.username,
+            "PASSWORD": u.password,
+            "HOST": u.hostname,
+            "PORT": u.port or 5432,
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = []
 
