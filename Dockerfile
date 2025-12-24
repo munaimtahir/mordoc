@@ -7,8 +7,11 @@ RUN npm ci
 COPY frontend/ ./
 
 # Build frontend with API base URL and base path
-# VITE_API_BASE: API endpoint (defaults to relative /api, works with Traefik)
-# VITE_BASE: Base path for deployment (e.g., /mordoc for subpath routing)
+# VITE_API_BASE: API endpoint (defaults to relative /api, works with Keystone/Traefik)
+# VITE_BASE: Base path for deployment
+#   - For root deployment: / (default)
+#   - For Keystone subpath: /{APP_SLUG} (e.g., /mordoc)
+#   - Keystone should pass --build-arg VITE_BASE=/{APP_SLUG}
 ARG VITE_API_BASE=/api
 ARG VITE_BASE=/
 ENV VITE_API_BASE=${VITE_API_BASE}
