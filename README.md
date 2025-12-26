@@ -240,14 +240,29 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ### Keystone Deployment
 
-Mordoc can be deployed using [Keystone](https://github.com/your-username/keystone), a self-hosted deployment control panel. See [docs/KEYSTONE_DEPLOYMENT.md](docs/KEYSTONE_DEPLOYMENT.md) for detailed instructions.
+Mordoc is **fully compatible** with [Keystone](https://github.com/your-username/keystone) for path-based deployment.
 
-**Quick Start:**
-1. Add repository in Keystone
-2. Create app with required environment variables (DATABASE_URL, REDIS_URL)
-3. Deploy!
+**Quick Start**: See [KEYSTONE_QUICK_START.md](KEYSTONE_QUICK_START.md)  
+**Full Report**: See [KEYSTONE_COMPATIBILITY_REPORT.md](KEYSTONE_COMPATIBILITY_REPORT.md)  
+**Test Plan**: See [docs/KEYSTONE_TEST_PLAN.md](docs/KEYSTONE_TEST_PLAN.md)
 
-The Dockerfile at the root builds both frontend and backend into a single container that can be deployed via Keystone.
+**Key Features**:
+- ✅ Works at subpaths (e.g., `http://VPS_IP/mordoc/`)
+- ✅ Traefik reverse proxy compatible
+- ✅ Single container deployment
+- ✅ WhiteNoise for static files
+- ✅ Automated migrations and setup
+- ✅ Health check endpoint: `/api/health/`
+
+**Required Environment Variables**:
+- `DATABASE_URL` - PostgreSQL connection
+- `REDIS_URL` - Redis for Celery
+- `DJANGO_SECRET_KEY` - Security key
+- `DJANGO_FORCE_SCRIPT_NAME` - Your app slug (e.g., `/mordoc`)
+- `DJANGO_ALLOWED_HOSTS` - Your VPS IP/domain
+- `CORS_ALLOWED_ORIGINS` - Your VPS IP
+
+The Dockerfile at the root builds both frontend and backend into a single container optimized for Keystone deployment.
 
 ## License
 

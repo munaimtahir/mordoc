@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import './styles.css'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'
+// Use relative API path by default for Keystone compatibility
+// Falls back to absolute URL for local dev if needed
+const API_BASE = import.meta.env.VITE_API_BASE || '/api'
 
 // Types
 type Project = { id: string; name: string; description: string }
